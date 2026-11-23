@@ -1,0 +1,10 @@
+{
+  "name": "Keep Talking",
+  "short_name": "Keep Talking",
+  "description": "Daily conversation and sentence-building practice.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f3ea",
+  "theme_color": "#116a5b",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

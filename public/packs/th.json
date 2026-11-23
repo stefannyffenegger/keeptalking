@@ -1,0 +1,113 @@
+{
+  "code": "th",
+  "name": "Thai",
+  "joiner": "",
+  "voices": {
+    "krap": { "label": "ผม / ครับ", "tokens": { "{I}": "ผม", "{pol}": "ครับ", "{polq}": "ครับ" } },
+    "ka": { "label": "ฉัน / ค่ะ, คะ", "tokens": { "{I}": "ฉัน", "{pol}": "ค่ะ", "{polq}": "คะ" } }
+  },
+  "words": [
+    ["ไป", "go", 1], ["มา", "come", 1], ["กิน", "eat", 1], ["ดื่ม", "drink", 1], ["ชอบ", "like", 1],
+    ["อยาก", "want to", 1], ["ไม่", "not", 1], ["อะไร", "what", 1], ["ที่ไหน", "where", 1], ["ไหน", "where (short)", 1],
+    ["นี่", "this", 1], ["น้ำ", "water", 1], ["ข้าว", "rice, food", 1], ["กาแฟ", "coffee", 1], ["บ้าน", "home", 1],
+    ["ตลาด", "market", 1], ["วันนี้", "today", 1], ["คุณ", "you", 1], ["ชื่อ", "to be named", 1], ["ไหม", "yes/no question word", 1],
+    ["อร่อย", "delicious", 1], ["มาก", "very", 1], ["เท่าไหร่", "how much", 1], ["ขอ", "may I have", 1], ["หน่อย", "a bit (softener)", 1],
+    ["จะ", "will", 1], ["กลับ", "return", 1], ["อยู่", "to be at", 1],
+
+    ["พรุ่งนี้", "tomorrow", 2], ["ทำงาน", "work", 2], ["เรียน", "study", 2], ["พูด", "speak", 2], ["ภาษาไทย", "Thai language", 2],
+    ["ได้", "can", 2], ["นิดหน่อย", "a little", 2], ["เข้าใจ", "understand", 2], ["ช่วย", "help, please", 2], ["ช้าๆ", "slowly", 2],
+    ["เอา", "want, take", 2], ["เผ็ด", "spicy", 2], ["เก็บเงิน", "take payment", 2], ["ด้วย", "too, please", 2], ["ห้องน้ำ", "bathroom", 2],
+    ["สนามบิน", "airport", 2], ["จอด", "stop, park", 2], ["ตรงนี้", "right here", 2], ["เลี้ยว", "turn", 2], ["ซ้าย", "left", 2],
+    ["ขวา", "right", 2], ["หรือยัง", "yet?", 2], ["แล้ว", "already", 2], ["กำลัง", "in the middle of", 2], ["ทุกวัน", "every day", 2],
+    ["แพง", "expensive", 2],
+
+    ["เคย", "have ever", 3], ["ประเทศไทย", "Thailand", 3], ["ต้อง", "must", 3], ["ก่อน", "first, before", 3], ["ไม่ได้", "cannot", 3],
+    ["เพราะว่า", "because", 3], ["เหนื่อย", "tired", 3], ["ถ้า", "if", 3], ["ฝนตก", "to rain", 3], ["อาหารไทย", "Thai food", 3],
+    ["แต่", "but", 3], ["คิดว่า", "think that", 3], ["คิดถึง", "miss", 3], ["ครอบครัว", "family", 3], ["ลืม", "forget", 3],
+    ["ได้ไหม", "could you?", 3], ["กับ", "with", 3], ["เพื่อน", "friend", 3]
+  ],
+  "sentences": [
+    { "id": "like-coffee", "level": 1, "en": "I like coffee.", "tokens": ["{I}", "ชอบ", "กาแฟ", "{pol}"] },
+    { "id": "want-eat", "level": 1, "en": "I want to eat rice.", "tokens": ["{I}", "อยาก", "กิน", "ข้าว", "{pol}"] },
+    { "id": "where-going", "level": 1, "en": "Where are you going?", "tokens": ["คุณ", "จะ", "ไป", "ไหน", "{polq}"] },
+    { "id": "your-name", "level": 1, "en": "What is your name?", "tokens": ["คุณ", "ชื่อ", "อะไร", "{polq}"] },
+    { "id": "delicious", "level": 1, "en": "This is very delicious.", "tokens": ["นี่", "อร่อย", "มาก", "{pol}"] },
+    { "id": "how-much", "level": 1, "en": "How much is this?", "tokens": ["นี่", "เท่าไหร่", "{polq}"] },
+    { "id": "you-like-coffee", "level": 1, "en": "Do you like coffee?", "tokens": ["คุณ", "ชอบ", "กาแฟ", "ไหม", "{polq}"] },
+    { "id": "no-coffee", "level": 1, "en": "I don't drink coffee.", "tokens": ["{I}", "ไม่", "ดื่ม", "กาแฟ", "{pol}"] },
+    { "id": "water-please", "level": 1, "en": "May I have some water?", "tokens": ["ขอ", "น้ำ", "หน่อย", "{pol}"] },
+    { "id": "going-home", "level": 1, "en": "I'm going back home.", "tokens": ["{I}", "จะ", "กลับ", "บ้าน", "{pol}"] },
+    { "id": "where-market", "level": 1, "en": "Where is the market?", "tokens": ["ตลาด", "อยู่", "ที่ไหน", "{polq}"] },
+    { "id": "today-market", "level": 1, "en": "Today I'm going to the market.", "tokens": ["วันนี้", "{I}", "จะ", "ไป", "ตลาด", "{pol}"], "alts": [["{I}", "จะ", "ไป", "ตลาด", "วันนี้", "{pol}"]] },
+
+    { "id": "speak-little", "level": 2, "en": "I can speak a little Thai.", "tokens": ["{I}", "พูด", "ภาษาไทย", "ได้", "นิดหน่อย", "{pol}"] },
+    { "id": "dont-understand", "level": 2, "en": "I don't understand.", "tokens": ["{I}", "ไม่", "เข้าใจ", "{pol}"] },
+    { "id": "speak-slowly", "level": 2, "en": "Please speak slowly.", "tokens": ["ช่วย", "พูด", "ช้าๆ", "หน่อย", "{pol}"] },
+    { "id": "not-spicy", "level": 2, "en": "I don't want it spicy.", "tokens": ["ไม่", "เอา", "เผ็ด", "{pol}"] },
+    { "id": "check-please", "level": 2, "en": "The bill, please.", "tokens": ["เก็บเงิน", "ด้วย", "{pol}"] },
+    { "id": "where-bathroom", "level": 2, "en": "Where is the bathroom?", "tokens": ["ห้องน้ำ", "อยู่", "ที่ไหน", "{polq}"] },
+    { "id": "to-airport", "level": 2, "en": "To the airport, please.", "tokens": ["ไป", "สนามบิน", "{pol}"] },
+    { "id": "stop-here", "level": 2, "en": "Please stop right here.", "tokens": ["จอด", "ตรงนี้", "{pol}"] },
+    { "id": "turn-left", "level": 2, "en": "Turn left.", "tokens": ["เลี้ยว", "ซ้าย", "{pol}"] },
+    { "id": "turn-right", "level": 2, "en": "Turn right.", "tokens": ["เลี้ยว", "ขวา", "{pol}"] },
+    { "id": "eaten-yet", "level": 2, "en": "Have you eaten yet?", "tokens": ["คุณ", "กิน", "ข้าว", "หรือยัง", "{polq}"] },
+    { "id": "already-ate", "level": 2, "en": "I've already eaten.", "tokens": ["{I}", "กิน", "ข้าว", "แล้ว", "{pol}"] },
+    { "id": "working-now", "level": 2, "en": "I'm working right now.", "tokens": ["{I}", "กำลัง", "ทำงาน", "{pol}"] },
+    { "id": "tomorrow-work", "level": 2, "en": "Tomorrow I will go to work.", "tokens": ["พรุ่งนี้", "{I}", "จะ", "ไป", "ทำงาน", "{pol}"], "alts": [["{I}", "จะ", "ไป", "ทำงาน", "พรุ่งนี้", "{pol}"]] },
+    { "id": "study-daily", "level": 2, "en": "I study Thai every day.", "tokens": ["{I}", "เรียน", "ภาษาไทย", "ทุกวัน", "{pol}"], "alts": [["ทุกวัน", "{I}", "เรียน", "ภาษาไทย", "{pol}"]] },
+    { "id": "very-expensive", "level": 2, "en": "It's very expensive.", "tokens": ["แพง", "มาก", "{pol}"] },
+
+    { "id": "been-thailand", "level": 3, "en": "Have you ever been to Thailand?", "tokens": ["คุณ", "เคย", "ไป", "ประเทศไทย", "ไหม", "{polq}"] },
+    { "id": "home-first", "level": 3, "en": "I have to go home first.", "tokens": ["{I}", "ต้อง", "กลับ", "บ้าน", "ก่อน", "{pol}"] },
+    { "id": "cant-come", "level": 3, "en": "I can't come today because I'm tired.", "tokens": ["วันนี้", "{I}", "มา", "ไม่ได้", "เพราะว่า", "เหนื่อย", "{pol}"] },
+    { "id": "if-rain", "level": 3, "en": "If it rains, I won't go.", "tokens": ["ถ้า", "ฝนตก", "{I}", "จะ", "ไม่", "ไป", "{pol}"] },
+    { "id": "thai-food-spicy", "level": 3, "en": "I like Thai food, but I can't eat spicy.", "tokens": ["{I}", "ชอบ", "อาหารไทย", "แต่", "กิน", "เผ็ด", "ไม่ได้", "{pol}"] },
+    { "id": "think-delicious", "level": 3, "en": "I think it's delicious.", "tokens": ["{I}", "คิดว่า", "อร่อย", "{pol}"] },
+    { "id": "miss-family", "level": 3, "en": "I miss my family.", "tokens": ["{I}", "คิดถึง", "ครอบครัว", "{pol}"] },
+    { "id": "forgot", "level": 3, "en": "I forgot.", "tokens": ["{I}", "ลืม", "แล้ว", "{pol}"] },
+    { "id": "help-me", "level": 3, "en": "Could you help me a bit?", "tokens": ["ช่วย", "{I}", "หน่อย", "ได้ไหม", "{polq}"] },
+    { "id": "with-friend", "level": 3, "en": "I'll go with a friend.", "tokens": ["{I}", "จะ", "ไป", "กับ", "เพื่อน", "{pol}"] }
+  ],
+  "dialogues": [
+    { "id": "cafe", "level": 1, "title": "At the café", "lines": [
+      { "who": "them", "th": "รับอะไรดีคะ", "en": "What would you like?" },
+      { "who": "me", "en": "May I have a coffee?", "ok": "ขอกาแฟหน่อย{pol}", "bad": ["กาแฟอยู่ที่ไหน{polq}", "{I}ไม่ดื่มกาแฟ{pol}"] },
+      { "who": "them", "th": "ร้อนหรือเย็นคะ", "en": "Hot or iced?" },
+      { "who": "me", "en": "Iced, please.", "ok": "เย็น{pol}", "bad": ["แพงมาก{pol}", "ไม่เป็นไร{pol}"] },
+      { "who": "them", "th": "หกสิบบาทค่ะ", "en": "That's 60 baht." },
+      { "who": "me", "en": "Thank you.", "ok": "ขอบคุณ{pol}", "bad": ["ขอโทษ{pol}", "สวัสดี{pol}"] }
+    ] },
+    { "id": "smalltalk", "level": 1, "title": "Meeting someone", "lines": [
+      { "who": "them", "th": "สวัสดีครับ คุณชื่ออะไรครับ", "en": "Hello, what's your name?" },
+      { "who": "me", "en": "Hello. And what is your name?", "ok": "สวัสดี{pol} คุณชื่ออะไร{polq}", "bad": ["ขอบคุณ{pol} คุณไปไหน{polq}", "ขอโทษ{pol} นี่เท่าไหร่{polq}"] },
+      { "who": "them", "th": "ผมชื่อเอกครับ สบายดีไหมครับ", "en": "I'm Ek. How are you?" },
+      { "who": "me", "en": "I'm well, thanks.", "ok": "สบายดี{pol} ขอบคุณ{pol}", "bad": ["ไม่เข้าใจ{pol}", "ไม่เอา{pol} ขอบคุณ{pol}"] }
+    ] },
+    { "id": "restaurant", "level": 2, "title": "Ordering food", "lines": [
+      { "who": "them", "th": "จะสั่งอะไรดีครับ", "en": "What would you like to order?" },
+      { "who": "me", "en": "Fried rice, please. Not spicy.", "ok": "ขอข้าวผัด ไม่เอาเผ็ด{pol}", "bad": ["ข้าวผัดอยู่ที่ไหน{polq}", "{I}กินข้าวแล้ว{pol}"] },
+      { "who": "them", "th": "รับน้ำอะไรไหมครับ", "en": "Anything to drink?" },
+      { "who": "me", "en": "Just water, please.", "ok": "ขอน้ำเปล่า{pol}", "bad": ["ไม่อร่อย{pol}", "เก็บเงินด้วย{pol}"] },
+      { "who": "them", "th": "อร่อยไหมครับ", "en": "Is it good?" },
+      { "who": "me", "en": "Very delicious. The bill, please.", "ok": "อร่อยมาก{pol} เก็บเงินด้วย{pol}", "bad": ["แพงมาก{pol} ไม่เอา{pol}", "{I}ไม่เข้าใจ{pol}"] }
+    ] },
+    { "id": "taxi", "level": 2, "title": "Taking a taxi", "lines": [
+      { "who": "them", "th": "ไปไหนครับ", "en": "Where to?" },
+      { "who": "me", "en": "To the airport, please.", "ok": "ไปสนามบิน{pol}", "bad": ["สนามบินแพงมาก{pol}", "{I}อยู่บ้าน{pol}"] },
+      { "who": "them", "th": "ถึงแล้วครับ จอดตรงไหนดีครับ", "en": "We're here. Where should I stop?" },
+      { "who": "me", "en": "Please stop right here.", "ok": "จอดตรงนี้{pol}", "bad": ["เลี้ยวซ้าย{pol}", "ไปตลาด{pol}"] }
+    ] },
+    { "id": "market", "level": 2, "title": "At the market", "lines": [
+      { "who": "them", "th": "สนใจอะไรคะ", "en": "What are you interested in?" },
+      { "who": "me", "en": "How much is this?", "ok": "นี่เท่าไหร่{polq}", "bad": ["นี่อร่อยมาก{pol}", "นี่ที่ไหน{polq}"] },
+      { "who": "them", "th": "สองร้อยบาทค่ะ", "en": "200 baht." },
+      { "who": "me", "en": "That's very expensive. Can you lower it?", "ok": "แพงมาก{pol} ลดได้ไหม{polq}", "bad": ["ถูกมาก{pol} ขอบคุณ{pol}", "{I}ไม่ชอบกิน{pol}"] }
+    ] },
+    { "id": "excuse", "level": 3, "title": "Changing plans", "lines": [
+      { "who": "them", "th": "วันนี้ไปกินข้าวด้วยกันไหม", "en": "Want to go eat together today?" },
+      { "who": "me", "en": "Sorry, I can't today because I'm tired.", "ok": "ขอโทษ{pol} วันนี้{I}ไปไม่ได้ เพราะว่าเหนื่อย{pol}", "bad": ["ขอบคุณ{pol} วันนี้{I}อยากไป{pol}", "ขอโทษ{pol} {I}ลืมกาแฟ{pol}"] },
+      { "who": "them", "th": "ไม่เป็นไร พรุ่งนี้ได้ไหม", "en": "No problem. How about tomorrow?" },
+      { "who": "me", "en": "Tomorrow is fine, if it doesn't rain.", "ok": "พรุ่งนี้ได้{pol} ถ้าฝนไม่ตก", "bad": ["เมื่อวานได้{pol} ถ้าฝนตก", "พรุ่งนี้{I}ต้องไปสนามบิน{pol}"] }
+    ] }
+  ]
+}
