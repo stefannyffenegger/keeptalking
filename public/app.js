@@ -26,6 +26,13 @@ const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(
 const profile = () => store.get('profile', newProfile());
 const voiceId = () => store.get('voice', null);
 const levelOf = () => Math.min(3, Math.floor(profile().skill));
+// Only the whole level changes what you practice; the fraction is progress toward the next one.
+const levelNote = (skill) => {
+  const level = Math.min(3, Math.floor(skill));
+  if (level >= 3) return 'Level 3 of 3, the top level. All sentences and conversations are open; it drops back if practice gets too hard.';
+  const progress = Math.round((skill - level) * 100);
+  return `Level ${level} of 3, ${progress}% of the way to level ${level + 1}. It adjusts to keep practice challenging but doable.`;
+};
 const cards = () => store.byPrefix('card:');
 const lettersOn = () => Boolean(pack.letters?.length) && store.get('letters', false) === true;
 // The course as practiced: the shipped pack, plus the learner's own words and any imported exercises.
@@ -115,7 +122,7 @@ function home() {
     h('button', { class: 'primary', onclick: () => startSession(catchUp.active) }, catchUp.active ? 'Start easy round' : done ? 'Practice again' : 'Start'),
     h('p', { class: 'muted' }, ''),
     h('button', { class: 'quiet', onclick: () => wordsView('', true) }, 'Get new exercises'),
-    h('p', { class: 'muted' }, `Level ${profile().skill.toFixed(1)} of 3.9. It adjusts to keep practice challenging but doable.`),
+    h('p', { class: 'muted' }, levelNote(profile().skill)),
     syncNote ? h('p', { class: 'muted' }, syncNote) : null,
   );
 }
