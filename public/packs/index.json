@@ -1,1 +1,4 @@
-[{ "code": "th", "name": "Thai", "nativeName": "ภาษาไทย" }]
+[
+  { "code": "th", "name": "Thai", "nativeName": "ภาษาไทย" },
+  { "code": "he", "name": "Hebrew", "nativeName": "עברית" }
+]

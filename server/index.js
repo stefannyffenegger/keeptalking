@@ -5,14 +5,14 @@ import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { createSender, loadVapid, removeSubscription, saveSubscription, sendDueReminders, validateSubscribe } from './reminders.js';
-import { createTutor, tutorErrorResponse, validateTutorRequest } from './tutor.js';
+import { createGenerator, createTutor, tutorErrorResponse, validateGenerateRequest, validateTutorRequest } from './tutor.js';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const publicDir = path.join(root, 'public');
 const MAX_BODY = 1_000_000;
 const MAX_RECORDS = 2000;
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml' };
-const HEADERS = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'" };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.ogg': 'audio/ogg' };
+const HEADERS = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; media-src 'self'; base-uri 'none'; frame-ancestors 'none'" };
 
 function loadToken(dataDir) {
   if (process.env.APP_TOKEN) return process.env.APP_TOKEN;
@@ -102,7 +102,7 @@ function serveStatic(req, res, pathname) {
   else fs.createReadStream(file).pipe(res);
 }
 
-export function createApp({ dataDir, token, tutor = createTutor(), tutorDailyLimit = Number(process.env.TUTOR_DAILY_LIMIT) || 100, sendPush, runReminders = false }) {
+export function createApp({ dataDir, token, tutor = createTutor(), generator = createGenerator(), tutorDailyLimit = Number(process.env.TUTOR_DAILY_LIMIT) || 100, sendPush, runReminders = false }) {
   fs.mkdirSync(dataDir, { recursive: true });
   const db = openDb(dataDir);
   const vapid = loadVapid(dataDir);
@@ -132,7 +132,7 @@ export function createApp({ dataDir, token, tutor = createTutor(), tutorDailyLim
         return;
       }
       if (!authorized(req)) return sendJson(res, 401, { error: 'Invalid access token.' });
-      if (req.method === 'GET' && pathname === '/api/config') return sendJson(res, 200, { tutor: Boolean(tutor) });
+      if (req.method === 'GET' && pathname === '/api/config') return sendJson(res, 200, { tutor: Boolean(tutor), generate: Boolean(generator) });
       if (req.method === 'POST' && pathname === '/api/sync') {
         const body = await readJson(req);
         if (!validSync(body)) return sendJson(res, 400, { error: 'Invalid sync request.' });
@@ -160,6 +160,19 @@ export function createApp({ dataDir, token, tutor = createTutor(), tutorDailyLim
           return sendJson(res, 200, await tutor(request));
         } catch (error) {
           console.error('Tutor error:', error.message);
+          const { status, message } = tutorErrorResponse(error);
+          return sendJson(res, status, { error: message });
+        }
+      }
+      if (req.method === 'POST' && pathname === '/api/generate') {
+        if (!generator) return sendJson(res, 503, { error: 'No API key is set on the server.' });
+        const request = validateGenerateRequest(await readJson(req));
+        if (!request) return sendJson(res, 400, { error: 'Invalid request.' });
+        if (!takeTutorCredit()) return sendJson(res, 429, { error: 'Daily API limit reached.' });
+        try {
+          return sendJson(res, 200, await generator(request));
+        } catch (error) {
+          console.error('Generate error:', error.message);
           const { status, message } = tutorErrorResponse(error);
           return sendJson(res, status, { error: message });
         }

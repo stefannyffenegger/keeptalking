@@ -4,11 +4,11 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { createApp } from '../server/index.js';
-import { createTutor } from '../server/tutor.js';
+import { createGenerator, createTutor } from '../server/tutor.js';
 
 async function withServer(options, run) {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-test-'));
-  const server = createApp({ dataDir, token: 'secret', tutor: null, ...options });
+  const server = createApp({ dataDir, token: 'secret', tutor: null, generator: null, ...options });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const base = `http://127.0.0.1:${server.address().port}`;
   const call = (url, body, token = 'secret') => fetch(base + url, {
@@ -59,3 +59,27 @@ test('tutor sends a valid request and enforces the daily limit', async () => {
     assert.equal((await call('/api/tutor', body)).status, 429);
   });
 });
+
+test('exercise generation uses structured output and shares the daily limit', async () => {
+  let sent;
+  const client = { beta: { messages: { stream: (request) => {
+    sent = request;
+    return { finalMessage: async () => ({ stop_reason: 'end_turn', content: [{ type: 'text', text: '{"lang":"th"}' }] }) };
+  } } } };
+  await withServer({ generator: createGenerator(client), tutorDailyLimit: 1 }, async (call) => {
+    const config = await (await call('/api/config')).json();
+    assert.equal(config.generate, true);
+    assert.equal((await call('/api/generate', { lang: 'th', prompt: '' })).status, 400);
+    const res = await call('/api/generate', { lang: 'th', prompt: 'Write exercises' });
+    assert.equal(res.status, 200);
+    assert.equal((await res.json()).text, '{"lang":"th"}');
+    assert.equal(sent.output_config.format.type, 'json_schema');
+    assert.equal(sent.messages[0].content, 'Write exercises');
+    assert.equal((await call('/api/generate', { lang: 'th', prompt: 'Again' })).status, 429);
+  });
+});
+
+test('exercise generation reports when no API key is set', () => withServer({}, async (call) => {
+  assert.equal((await (await call('/api/config')).json()).generate, false);
+  assert.equal((await call('/api/generate', { lang: 'th', prompt: 'x' })).status, 503);
+}));

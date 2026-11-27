@@ -15,6 +15,11 @@ export function applyVoice(text, voice) {
 
 export const resolveTokens = (tokens, voice) => tokens.map((token) => voice.tokens[token] ?? token);
 
+// Words written as {token} change with the speaker, for example Hebrew verbs that agree with the speaker's gender.
+const say = (voice, token) => voice.tokens[token] ?? token;
+export const pronOf = (pack, voice, token) => voice?.pron?.[token] ?? pack.pron?.[token] ?? '';
+export const lineText = (line) => line.text ?? line.th;
+
 const shuffle = (items, rng) => {
   const out = [...items];
   for (let i = out.length - 1; i > 0; i--) {
@@ -85,8 +90,14 @@ export function parseCustomWord({ word, meaning, example, exampleEn }, joiner) {
 const reviewable = (pack) => {
   const words = new Set(pack.words.map(([word]) => word));
   const sentences = new Set(pack.sentences.map((s) => s.id));
-  return (key) => (key.startsWith('w:') && words.has(key.slice(2))) || (key.startsWith('s:') && sentences.has(key.slice(2)));
+  const letters = new Set((pack.letters ?? []).map((l) => l.id));
+  return (key) => (key.startsWith('w:') && words.has(key.slice(2))) || (key.startsWith('s:') && sentences.has(key.slice(2))) || (key.startsWith('l:') && letters.has(key.slice(2)));
 };
+
+// Letters are introduced before words, so a new reader is never asked to read words yet.
+// Someone who already practices words keeps getting them while letters are added alongside.
+export const unseenLetters = (pack, cards) => (pack.letters ?? []).filter((l) => !cards[`l:${l.id}`]);
+const learningToRead = (pack, cards) => unseenLetters(pack, cards).length > 0 && !Object.keys(cards).some((k) => k.startsWith('w:') || k.startsWith('s:'));
 
 export const dueKeys = (pack, cards, now) => {
   const valid = reviewable(pack);
@@ -105,6 +116,13 @@ export function catchUpState(pack, cards, days, today, now) {
 }
 
 function pickNew(pack, cards, profile, budget) {
+  const letters = unseenLetters(pack, cards).slice(0, budget).map((l) => `l:${l.id}`);
+  if (learningToRead(pack, cards)) return letters;
+  if (letters.length) {
+    // Readers who opted into letters get one or two alongside their words.
+    const some = letters.slice(0, Math.min(2, budget));
+    return [...some, ...pickNew({ ...pack, letters: [] }, cards, profile, budget - some.length)];
+  }
   const maxLevel = Math.floor(profile.skill);
   const vocabulary = new Set(pack.words.map(([th]) => th));
   const known = new Set(pack.words.filter(([th]) => cards[`w:${th}`]).map(([th]) => th));
@@ -127,26 +145,37 @@ function pickNew(pack, cards, profile, budget) {
   return picks;
 }
 
-function wordExercise(pack, th, card, voice, rng, easy = false) {
-  const word = pack.words.find(([w]) => w === th);
+function wordExercise(pack, token, card, voice, rng, easy = false) {
+  const word = pack.words.find(([w]) => w === token);
   const [, en, level] = word;
-  const peers = pack.words.filter(([w, e, l]) => w !== th && e !== en && Math.abs(l - level) <= 1);
+  const th = say(voice, token);
+  const peers = pack.words.filter(([w, e, l]) => w !== token && say(voice, w) !== th && e !== en && Math.abs(l - level) <= 1);
   const others = shuffle(peers, rng).filter(([, e], i, list) => list.findIndex(([, x]) => x === e) === i).slice(0, 3);
-  const context = pack.sentences.find((s) => s.tokens.includes(th));
+  const context = pack.sentences.find((s) => s.tokens.includes(token));
   const production = !easy && (card?.reps ?? 0) >= 2;
-  const base = { key: `w:${th}`, type: 'word', th, en };
+  const base = { key: `w:${token}`, type: 'word', th, en, pron: pronOf(pack, voice, token) };
   if (production && context) {
-    const blank = resolveTokens(context.tokens, voice).map((t, i) => (context.tokens[i] === th ? '____' : t)).join(pack.joiner);
-    return { ...base, mode: 'produce', prompt: blank, hint: context.en, answer: th, options: shuffle([th, ...others.map(([w]) => w)], rng) };
+    const blank = resolveTokens(context.tokens, voice).map((t, i) => (context.tokens[i] === token ? '____' : t)).join(pack.joiner);
+    return { ...base, mode: 'produce', prompt: blank, hint: context.en, answer: th, options: shuffle([th, ...others.map(([w]) => say(voice, w))], rng) };
   }
   return { ...base, mode: 'recognize', prompt: th, hint: context ? resolveTokens(context.tokens, voice).join(pack.joiner) : '', answer: en, options: shuffle([en, ...others.map(([, e]) => e)], rng) };
+}
+
+function letterExercise(pack, letter, card, rng, easy = false) {
+  const peers = pack.letters.filter((l) => l.id !== letter.id && l.sound !== letter.sound);
+  const others = shuffle(peers, rng).filter((l, i, list) => list.findIndex((x) => x.sound === l.sound || x.char === l.char) === i).slice(0, 3);
+  const base = { key: `l:${letter.id}`, type: 'letter', letter };
+  if (!easy && (card?.reps ?? 0) >= 2) {
+    return { ...base, mode: 'produce', prompt: letter.sound, hint: `${letter.wordPron} – ${letter.wordEn}`, answer: letter.char, options: shuffle([letter.char, ...others.map((l) => l.char)], rng) };
+  }
+  return { ...base, mode: 'recognize', prompt: letter.char, hint: '', answer: letter.sound, options: shuffle([letter.sound, ...others.map((l) => l.sound)], rng) };
 }
 
 function sentenceExercise(pack, sentence, card, profile, voice, rng, easy = false) {
   const answer = resolveTokens(sentence.tokens, voice);
   const accepted = [answer, ...(sentence.alts ?? []).map((alt) => resolveTokens(alt, voice))];
   const decoyCount = easy ? 0 : Math.min(3, Math.floor(profile.skill) - 1 + ((card?.reps ?? 0) >= 3 ? 1 : 0));
-  const decoys = shuffle(pack.words.map(([w]) => w).filter((w) => !answer.includes(w)), rng).slice(0, decoyCount);
+  const decoys = shuffle([...new Set(pack.words.map(([w]) => say(voice, w)))].filter((w) => !answer.includes(w)), rng).slice(0, decoyCount);
   return { key: `s:${sentence.id}`, type: 'sentence', en: sentence.en, answer, accepted, tiles: shuffle([...answer, ...decoys], rng), joiner: pack.joiner };
 }
 
@@ -188,6 +217,7 @@ export function planSession(pack, cards, profile, voiceId, now, rng = Math.rando
   const exercises = keys.map((key) => {
     const id = key.slice(2);
     if (key.startsWith('w:')) return wordExercise(pack, id, cards[key], voice, rng, catchUp);
+    if (key.startsWith('l:')) return letterExercise(pack, pack.letters.find((l) => l.id === id), cards[key], rng, catchUp);
     return sentenceExercise(pack, pack.sentences.find((s) => s.id === id), cards[key], profile, voice, rng, catchUp);
   });
 
@@ -195,7 +225,8 @@ export function planSession(pack, cards, profile, voiceId, now, rng = Math.rando
   const dialogues = pack.dialogues
     .filter((d) => d.level <= dialogueLevel)
     .sort((a, b) => (cards[`d:${a.id}`]?.due ?? 0) - (cards[`d:${b.id}`]?.due ?? 0));
-  if (dialogues[0]) exercises.push(dialogueExercise(pack, dialogues[0], voice, rng));
+  // A conversation only helps once every letter has been met.
+  if (dialogues[0] && !learningToRead(pack, cards)) exercises.push(dialogueExercise(pack, dialogues[0], voice, rng));
   // Early extra practice must not stretch a card's review interval.
   return exercises.map((exercise) => ({ ...exercise, practice: (cards[exercise.key]?.due ?? 0) > now }));
 }

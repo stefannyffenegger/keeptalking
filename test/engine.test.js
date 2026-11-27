@@ -1,23 +1,85 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
-import { catchUpState, isCorrectOrder, newItemBudget, newProfile, parseCustomWord, planSession, schedule, streak, updateProfile, withCustomWords } from '../public/engine.js';
+import { applyVoice, catchUpState, isCorrectOrder, newItemBudget, newProfile, parseCustomWord, planSession, schedule, streak, updateProfile, withCustomWords } from '../public/engine.js';
 
-const pack = JSON.parse(fs.readFileSync(new URL('../public/packs/th.json', import.meta.url)));
+const load = (code) => JSON.parse(fs.readFileSync(new URL(`../public/packs/${code}.json`, import.meta.url)));
+const packs = [load('th'), load('he')];
+// Most tests describe a learner who already reads the script, as the app does with letters turned off.
+const pack = { ...packs[0], letters: [] };
 const NOW = Date.UTC(2026, 10, 23, 12);
 
-test('every sentence token is taught vocabulary and has no duplicate words', () => {
-  const words = new Set(pack.words.map(([w]) => w));
-  assert.equal(words.size, pack.words.length);
-  for (const s of pack.sentences) {
-    for (const t of [...s.tokens, ...(s.alts ?? []).flat()]) assert.ok(t.startsWith('{') || words.has(t), `${s.id}: ${t}`);
+for (const p of packs) {
+  test(`${p.code}: every sentence token is taught vocabulary and has no duplicate words`, () => {
+    const words = new Set(p.words.map(([w]) => w));
+    assert.equal(words.size, p.words.length);
+    for (const s of p.sentences) {
+      for (const t of [...s.tokens, ...(s.alts ?? []).flat()]) assert.ok(t.startsWith('{') || words.has(t), `${s.id}: ${t}`);
+      for (const alt of s.alts ?? []) assert.deepEqual([...alt].sort(), [...s.tokens].sort(), s.id);
+    }
+  });
+
+  test(`${p.code}: every voice defines the same tokens and dialogue choices stay distinct`, () => {
+    const voices = Object.values(p.voices);
+    for (const v of voices) assert.deepEqual(Object.keys(v.tokens).sort(), Object.keys(voices[0].tokens).sort());
+    for (const d of p.dialogues) for (const l of d.lines) {
+      if (l.who === 'them') { assert.ok(l.text && l.en, d.id); continue; }
+      for (const v of voices) assert.equal(new Set([l.ok, ...l.bad].map((t) => applyVoice(t, v))).size, 3, d.id);
+    }
+  });
+
+  test(`${p.code}: letters have unique ids and enough distinct sounds for choices`, () => {
+    assert.equal(new Set(p.letters.map((l) => l.id)).size, p.letters.length);
+    assert.ok(new Set(p.letters.map((l) => l.sound)).size >= 4);
+    for (const l of p.letters) assert.ok(l.char && l.name && l.sound && l.word && l.wordEn, l.id);
+  });
+}
+
+test('a new reader meets letters first, with no conversation yet', () => {
+  const he = packs[1];
+  const session = planSession(he, {}, newProfile(), 'f', NOW, () => 0.3);
+  assert.ok(session.length >= 1);
+  assert.ok(session.every((e) => e.type === 'letter'));
+  for (const e of session) {
+    assert.ok(e.options.includes(e.answer));
+    assert.equal(new Set(e.options).size, e.options.length);
   }
+  const allSeen = Object.fromEntries(he.letters.map((l) => [`l:${l.id}`, { reps: 1, interval: 1, ease: 2.3, due: NOW + 86_400_000 }]));
+  const later = planSession(he, allSeen, newProfile(), 'f', NOW, () => 0.3);
+  assert.ok(later.some((e) => e.type === 'word'));
+  assert.equal(later.at(-1).type, 'dialogue');
 });
 
-test('dialogue choices are distinct for both voices', () => {
-  for (const d of pack.dialogues) for (const l of d.lines.filter((x) => x.who === 'me')) {
-    assert.equal(new Set([l.ok, ...l.bad]).size, 3, d.id);
-  }
+test('a reader who turns letters on keeps getting words and conversations', () => {
+  const th = packs[0];
+  const cards = { 'w:กิน': { reps: 3, interval: 5, ease: 2.3, due: NOW + 86_400_000 } };
+  const session = planSession(th, cards, { ...newProfile(), accuracy: 0.95 }, 'krap', NOW, () => 0.3);
+  assert.ok(session.some((e) => e.type === 'letter'));
+  assert.ok(session.some((e) => e.type === 'word' && e.key !== 'w:กิน'));
+  assert.equal(session.at(-1).type, 'dialogue');
+});
+
+test('practiced letters switch to choosing the letter for a sound', () => {
+  const he = packs[1];
+  const cards = { 'l:bet': { reps: 3, interval: 5, ease: 2.3, due: NOW - 1000 } };
+  const ex = planSession(he, cards, newProfile(), 'm', NOW, () => 0.3).find((e) => e.key === 'l:bet');
+  assert.equal(ex.mode, 'produce');
+  assert.equal(ex.prompt, 'b');
+  assert.ok(ex.options.includes(ex.answer));
+  const sounds = ex.options.map((char) => he.letters.find((l) => l.char === char).sound);
+  assert.equal(new Set(sounds).size, sounds.length, 'each choice makes a different sound');
+});
+
+test('speaker-dependent words follow the chosen voice', () => {
+  const he = { ...packs[1], letters: [] };
+  const cards = { 'w:{like}': { reps: 1, interval: 1, ease: 2.3, due: NOW - 1000 } };
+  const male = planSession(he, cards, newProfile(), 'm', NOW, () => 0.3).find((e) => e.key === 'w:{like}');
+  const female = planSession(he, cards, newProfile(), 'f', NOW, () => 0.3).find((e) => e.key === 'w:{like}');
+  assert.equal(male.prompt, 'אוהב');
+  assert.equal(female.prompt, 'אוהבת');
+  assert.equal(female.pron, 'ohevet');
+  const sentence = planSession(he, { 's:like-coffee': { reps: 1, interval: 1, ease: 2.3, due: NOW - 1000 } }, newProfile(), 'f', NOW, () => 0.3).find((e) => e.key === 's:like-coffee');
+  assert.deepEqual(sentence.answer, ['אני', 'אוהבת', 'קפה']);
 });
 
 test('questions and statements use the right polite particle', () => {

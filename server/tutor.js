@@ -1,8 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { UPDATE_SCHEMA } from '../public/content.js';
 
 const MODEL = process.env.TUTOR_MODEL || 'claude-opus-5-5';
 const MAX_TURNS = 20;
 const MAX_CHARS = 500;
+const MAX_PROMPT_CHARS = 40_000;
 
 const SCHEMA = {
   type: 'object',
@@ -66,6 +68,34 @@ export function createTutor(client = process.env.ANTHROPIC_API_KEY ? new Anthrop
     const text = response.content.find((block) => block.type === 'text')?.text;
     if (!text) throw new TutorError('The tutor returned no reply.', 502);
     return JSON.parse(text);
+  };
+}
+
+export function validateGenerateRequest(body) {
+  const { lang, prompt } = body ?? {};
+  if (!/^[a-z]{2,8}$/.test(lang ?? '') || typeof prompt !== 'string' || !prompt.length || prompt.length > MAX_PROMPT_CHARS) return null;
+  return { lang, prompt };
+}
+
+// Writes new exercises from the same prompt a learner can paste into a chat app. The reply is checked by the client.
+export function createGenerator(client = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null) {
+  if (!client) return null;
+  return async function generate({ prompt }) {
+    const response = await client.beta.messages.stream({
+      model: MODEL,
+      max_tokens: 32000,
+      betas: ['server-side-fallback-2026-07-01'],
+      fallbacks: 'default',
+      system: 'You write language-learning exercises for a practice app. Follow the rules in the request exactly; the app rejects items that break them.',
+      output_config: { effort: 'medium', format: { type: 'json_schema', schema: UPDATE_SCHEMA } },
+      messages: [{ role: 'user', content: prompt }],
+    }).finalMessage();
+
+    if (response.stop_reason === 'refusal') throw new TutorError('The model declined to write exercises.', 422);
+    if (response.stop_reason === 'max_tokens') throw new TutorError('The reply was cut off. Please try again.', 502);
+    const text = response.content.find((block) => block.type === 'text')?.text;
+    if (!text) throw new TutorError('The model returned no exercises.', 502);
+    return { text };
   };
 }
 
