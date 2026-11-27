@@ -1,5 +1,5 @@
-const CACHE = 'keep-talking-v2';
-const SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/engine.js', '/store.js', '/packs/index.json', '/packs/th.json', '/manifest.webmanifest', '/icon.svg'];
+const CACHE = 'keep-talking-v3';
+const SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/engine.js', '/store.js', '/content.js', '/speech.js', '/packs/index.json', '/packs/th.json', '/packs/he.json', '/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
