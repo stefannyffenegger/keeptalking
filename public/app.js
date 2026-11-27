@@ -27,12 +27,34 @@ const profile = () => store.get('profile', newProfile());
 const voiceId = () => store.get('voice', null);
 const levelOf = () => Math.min(3, Math.floor(profile().skill));
 // Only the whole level changes what you practice; the fraction is progress toward the next one.
-const levelNote = (skill) => {
+function levelCard({ skill, accuracy, answers }) {
   const level = Math.min(3, Math.floor(skill));
-  if (level >= 3) return 'Level 3 of 3, the top level. All sentences and conversations are open; it drops back if practice gets too hard.';
+  const top = level >= 3;
   const progress = Math.round((skill - level) * 100);
-  return `Level ${level} of 3, ${progress}% of the way to level ${level + 1}. It adjusts to keep practice challenging but doable.`;
-};
+  const fill = (step) => (step < level || top ? 100 : step === level ? progress : 0);
+  const right = Math.round(accuracy * 100);
+  const status = top
+    ? 'Top level: all sentences and conversations are open. New exercises keep stretching you from here.'
+    : `${progress}% of the way to level ${level + 1}.`;
+  const recent = answers < 8
+    ? 'Answer a few more and it starts adjusting.'
+    : `Lately you get about ${right}% right. ${right >= 90 ? (top ? 'You’re steady here.' : 'That moves you up.') : right < 72 ? 'That moves you down a little, to make practice easier.' : 'That keeps you where you are.'}`;
+  return h('div', { class: 'card level' },
+    h('div', { class: 'level-head' }, h('b', {}, `Level ${level} of 3`), h('span', { class: 'muted' }, status)),
+    h('div', { class: 'level-bar', role: 'img', 'aria-label': top ? 'Level 3 of 3, top level' : `Level ${level} of 3, ${progress}% to level ${level + 1}` },
+      ...[1, 2, 3].map((step) => {
+        const bar = h('i');
+        bar.style.width = `${fill(step)}%`; // set via CSSOM: the CSP forbids inline style attributes
+        return h('span', {}, bar);
+      })),
+    h('div', { class: 'level-steps muted', 'aria-hidden': 'true' }, h('span', {}, '1 Short phrases'), h('span', {}, '2 Everyday sentences'), h('span', {}, '3 Natural speech')),
+    h('p', { class: 'muted' }, recent),
+    h('details', {},
+      h('summary', {}, 'How levels work'),
+      h('p', { class: 'muted' }, 'Your level follows how you do. Get about 9 in 10 right and it rises; drop below about 7 in 10 and it eases off, so practice stays challenging but doable.'),
+      h('p', { class: 'muted' }, 'Each level opens longer sentences and conversations, and adds extra wrong words to the word tiles. Words you already have stay in your reviews.'),
+      h('p', { class: 'muted' }, 'Level 3 is the top. From there, Get new exercises asks for material a step harder, based on the words you know.')));
+}
 const cards = () => store.byPrefix('card:');
 const lettersOn = () => Boolean(pack.letters?.length) && store.get('letters', false) === true;
 // The course as practiced: the shipped pack, plus the learner's own words and any imported exercises.
@@ -120,9 +142,8 @@ function home() {
       h('div', { class: 'stat' }, h('b', {}, String(catchUp.due)), h('span', {}, catchUp.active ? 'to refresh' : 'due now')),
       h('div', { class: 'stat' }, h('b', {}, String(learned)), h('span', {}, 'remembered'))),
     h('button', { class: 'primary', onclick: () => startSession(catchUp.active) }, catchUp.active ? 'Start easy round' : done ? 'Practice again' : 'Start'),
-    h('p', { class: 'muted' }, ''),
     h('button', { class: 'quiet', onclick: () => wordsView('', true) }, 'Get new exercises'),
-    h('p', { class: 'muted' }, levelNote(profile().skill)),
+    levelCard(profile()),
     syncNote ? h('p', { class: 'muted' }, syncNote) : null,
   );
 }

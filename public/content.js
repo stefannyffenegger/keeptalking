@@ -22,6 +22,7 @@ export function progressSummary(pack, cards, profile, voiceId) {
   return {
     language: pack.name,
     level: Math.min(3, Math.floor(profile.skill)),
+    accuracy: Math.round((profile.accuracy ?? 0) * 100),
     voice: voice?.label ?? '',
     counts: { known: count('known'), learning: count('learning'), weak: count('weak'), new: count('new') },
     words,
@@ -43,7 +44,8 @@ export function buildUpdatePrompt(pack, cards, profile, voiceId) {
   return `I'm learning ${p.language} with a small practice app. Please write new exercises for me as JSON that I can paste back into the app.
 
 ## My progress
-- Level ${p.level} of 3 (1: very short everyday sentences, 3: linked clauses and natural speech).
+- Level ${p.level} of 3 (1: very short everyday sentences, 3: linked clauses and natural speech).${p.level >= 3 ? `
+- I've reached the app's top level: I know ${p.counts.known} words and get about ${p.accuracy}% right. Please push a step beyond level 3: longer sentences that link two ideas, less common everyday words, and both casual and polite ways of saying things. Keep each sentence under about 12 words so it still works as tiles to drag into order.` : ''}
 - I speak as: ${p.voice}.
 - Words I know well: ${byState('known')}
 - Words I'm still learning: ${byState('learning')}

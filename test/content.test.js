@@ -33,6 +33,12 @@ test('the prompt carries progress, speaker tokens and the reply format', () => {
   assert.match(prompt, /"lang": "th"/);
 });
 
+test('at the top level the prompt asks for a step beyond it', () => {
+  const top = buildUpdatePrompt(th, {}, { skill: 3.5, accuracy: 0.93, answers: 200 }, 'ka');
+  assert.match(top, /top level: I know 0 words and get about 93% right/);
+  assert.doesNotMatch(buildUpdatePrompt(th, {}, newProfile(), 'ka'), /top level/);
+});
+
 test('a pasted chat reply is found inside surrounding text', () => {
   const text = `Sure! Here you go:\n\n\`\`\`json\n${JSON.stringify(reply)}\n\`\`\`\nEnjoy.`;
   assert.equal(extractJson(text).lang, 'th');

@@ -70,3 +70,12 @@ body.focus #nav { display: none; }
 label.check { display: flex; align-items: center; gap: 10px; font-weight: 600; }
 label.check input { width: 22px; min-height: 22px; }
 textarea[readonly] { font-family: ui-monospace, monospace; font-size: .8rem; margin-top: 8px; }
+.level-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.level-head b { font-size: 1.1rem; }
+.level-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 12px 0 6px; }
+.level-bar span { height: 10px; border-radius: 5px; background: var(--soft); overflow: hidden; }
+.level-bar i { display: block; height: 100%; background: var(--accent); }
+.level-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; font-size: .75rem; }
+.level p { margin: 10px 0 0; }
+.level details { margin-top: 10px; }
+.level summary { cursor: pointer; color: var(--accent); font-weight: 600; min-height: 32px; }
